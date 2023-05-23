@@ -8,16 +8,15 @@ SETTING = {
     'last_digits': '1217',
 }
 
-def check_hash(card_number: int) -> int:
+def check_hash(card_center: int, card_begin: int ) -> int:
     """ Функция проверки на совпадение хэша
     """
 
     logging.info("Проверка хеша")
-    for i in SETTING["begin_digits"]:
-            card_number = i + str(card_number) + SETTING['last_digits']
-            card_hash = hashlib.sha224(card_number.encode()).hexdigest()
-            if SETTING['hash'] == card_hash:
-                return card_number
+    card_number = str(card_begin) + str(card_center) + SETTING['last_digits']
+    card_hash = hashlib.sha224(card_number.encode()).hexdigest()
+    if SETTING['hash'] == card_hash:
+        return card_number
     return False
 
 
