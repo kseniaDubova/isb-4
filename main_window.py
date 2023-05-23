@@ -3,9 +3,12 @@ import sys
 import multiprocessing as mp
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (QApplication, QLabel, QMainWindow, QPushButton, QFileDialog)
-from hashing import check_hash, algorithm_luna
+from PyQt5.QtWidgets import (
+    QApplication, QLabel, QMainWindow, QPushButton, QProgressBar)
+from hashing import check_hash, algorithm_luna, SETTING
 import time
+
+
 class Window(QMainWindow):
     def __init__(self) -> None:
         """
@@ -20,62 +23,56 @@ class Window(QMainWindow):
         self.info = QLabel(self)
         self.info.setText("Выберите размер пула")
         self.info.setGeometry(225, 20, 500, 50)
-        #self.message = QLabel(self)
-       # self.message.setGeometry(225, 250, 200, 50)
+        self.progress = QProgressBar(self)
+        self.progress.setValue(0)
+        self.progress.setGeometry(100, 230, 400, 50)
+        self.progress.hide()
         self.button_card = QPushButton('Найти карту', self)
         self.button_card.setGeometry(200, 100, 200, 50)
-       # self.button_card.clicked.connect(self.on_activated)
-        #self.button_card.hide()
-       # self.key_size = QtWidgets.QComboBox(self)
+        self.button_card.clicked.connect(self.find_card)
+        self.button_card.hide()
+        self.pool_size = QtWidgets.QComboBox(self)
         self.result = QLabel(self)
-        self.result.setGeometry(200, 150, 200, 50)        
-        '''
-        self.key_size.addItems(["64 бит", "128 бит", "192 бит"])
-        self.key_size.setGeometry(200, 50, 200, 50)
-        self.key_size.activated[str].connect(self.on_activated)
-
-        self.button_e.clicked.connect(self.encryption)
-        self.button_e.hide()
-        self.button_d = QPushButton('Дешифровать текст', self)
-        self.button_d.setGeometry(200, 200, 200, 50)
-        self.button_d.clicked.connect(self.decryption)
-        self.button_d.hide()
-        '''
+        self.result.setGeometry(200, 150, 400, 100)
+        self.pool_size.addItems(["1", "2", "3", "4", "5", '6', '7', '8'])
+        self.pool_size.setGeometry(200, 50, 200, 50)
+        self.pool_size.activated[str].connect(self.on_activated)
         self.show()
 
     def on_activated(self, text: str) -> None:
         """
-        Функция присвоения размера ключа
+        Функция присвоения размера пула
         """
-       # self.prepare_pb()
-        start = time.time()
-        self.find_card(start)
-
-    def hidden(self) -> None:
-        """
-        Функция показа кнопок для шифрования и дешифрования после генерации ключей
-        """
-        self.button_d.show()
-        self.result.show()
+        self.size = int(re.findall('(\d+)', text)[0])
+        self.button_card.show()
 
     def find_card(self, start: float) -> None:
         """
-        Функция нахождения ключа
+        Функция нахождения карты
         """
-        with mp.Pool(self.value) as p:
+        start = time.time()
+        self.progress.show()
+        QApplication.processEvents()
+        with mp.Pool(self.size) as p:
             for i, result in enumerate(p.map(check_hash, range(99999, 10000000))):
                 if result:
-                    self.update_pb_on_success(start, result)
-                    p.terminate()
+                    self.success(start, result)
                     break
-                self.update_pb_on_progress(i)
+                self.progress.setValue(int((i)/9900000*100))
+                QApplication.processEvents()
             else:
-                self.result_label.setText('Solution not found')
-                self.pbar.setValue(100)
+                self.result.setText('НЕ НАЙДЕНО')
+                self.progress.setValue(0)
 
-
-
-
+    def success(self, start: float, result: float):
+        """Функция вывыда информации о карте
+        """
+        self.progress.setValue(100)
+        end = time.time() - start
+        result_text = f'Расшифрованный номер: {result}\n'
+        result_text += f'Проверка на алгоритм Луна: {algorithm_luna(result)}\n'
+        result_text += f'Время: {end:.2f} секунд'
+        self.result.setText(result_text)
 
 def application() -> None:
     app = QApplication(sys.argv)
@@ -85,4 +82,6 @@ def application() -> None:
 
 
 if __name__ == "__main__":
+  #  cores = mp.cpu_count() # 8
+ #   print(cores)
     application()
