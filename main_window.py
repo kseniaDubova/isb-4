@@ -1,12 +1,15 @@
+import multiprocessing as mp
 import re
 import sys
-import multiprocessing as mp
+import time
+
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (
-    QApplication, QLabel, QMainWindow, QPushButton, QProgressBar)
-from hashing import check_hash, algorithm_luna, SETTING
-import time
+from PyQt5.QtWidgets import (QApplication, QLabel, QMainWindow, QProgressBar,
+                             QPushButton)
+
+from graph import charting
+from hashing import SETTING, algorithm_luna, check_hash
 
 
 class Window(QMainWindow):
@@ -34,19 +37,24 @@ class Window(QMainWindow):
         self.result = QLabel(self)
         self.result.setGeometry(200, 150, 400, 100)
         self.pool_size = QtWidgets.QComboBox(self)
-        self.pool_size.addItems(["Выберите размер пула", "1", "2", "3", "4", "5", '6', '7', '8'])
+        self.pool_size.addItems([str(i) for i in range(1, 33)])
         self.pool_size.setGeometry(200, 50, 200, 50)
         self.pool_size.hide()
         self.number = QtWidgets.QComboBox(self)
         self.number.addItems(SETTING["begin_digits"])
         self.number.setGeometry(200, 20, 200, 50)
         self.number.activated[str].connect(self.on_activated)
+        self.graph = QPushButton('Построить график', self)
+        self.graph.setGeometry(200, 270, 200, 50)
+        self.graph.clicked.connect(self.show_graph)
+        self.graph.hide()
         self.show()
 
     def on_activated(self, text: str) -> None:
         """
-        Функция присвоения размера пула
+        Функция присвоения номера
         """
+        self.graph.hide()
         self.pool_size.show()
         try:
             self.number = int(re.findall('(\d+)', text)[0])
@@ -69,7 +77,7 @@ class Window(QMainWindow):
         Функция нахождения карты
         """
         items = [(i, self.number) for i in range(99999, 10000000)]
-        #print(items)
+        # print(items)
         start = time.time()
         self.progress.show()
         QApplication.processEvents()
@@ -84,15 +92,21 @@ class Window(QMainWindow):
                 self.result.setText('НЕ НАЙДЕНО')
                 self.progress.setValue(0)
 
-    def success(self, start: float, result: float):
+    def success(self, start: float, result: int):
         """Функция вывыда информации о карте
         """
+        self.result_card = result
         self.progress.setValue(100)
         end = time.time() - start
         result_text = f'Расшифрованный номер: {result}\n'
         result_text += f'Проверка на алгоритм Луна: {algorithm_luna(result)}\n'
         result_text += f'Время: {end:.2f} секунд'
         self.result.setText(result_text)
+        self.graph.show()
+
+    def show_graph(self):
+        charting(self.result_card)
+
 
 def application() -> None:
     app = QApplication(sys.argv)
