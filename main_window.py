@@ -32,7 +32,7 @@ class Window(QMainWindow):
         self.progress.hide()
         self.button_card = QPushButton('Найти карту', self)
         self.button_card.setGeometry(200, 100, 200, 50)
-        self.button_card.clicked.connect(self.find_card)
+        self.button_card.clicked.connect(self.preparation)
         self.button_card.hide()
         self.result = QLabel(self)
         self.result.setGeometry(200, 150, 400, 100)
@@ -72,25 +72,40 @@ class Window(QMainWindow):
             self.size = 0
         self.button_card.show()
 
-    def find_card(self, start: float) -> None:
+    def preparation(self):
         """
-        Функция нахождения карты
+        функция подгатавливает линию прогресса и список для пула
         """
+
         items = [(i, self.number) for i in range(99999, 10000000)]
-        # print(items)
         start = time.time()
         self.progress.show()
         QApplication.processEvents()
+        self.progress_bar(start, items)
+
+
+    def progress_bar(self, start: float, items: list) -> None:
+        """
+        Функция отображения прогресса при поиске
+        """
         with mp.Pool(self.size) as p:
             for i, result in enumerate(p.starmap(check_hash, items)):
                 if result:
                     self.success(start, result)
+                    p.terminate()
                     break
-                self.progress.setValue(int((i)/9900000*100))
-                QApplication.processEvents()
+                self.update_progress_bar(i)
             else:
                 self.result.setText('НЕ НАЙДЕНО')
                 self.progress.setValue(0)
+
+    def update_progress_bar(self, i: int):
+        """
+        Функция обновления прогресса
+        """
+
+        self.progress.setValue(int((i)/9900000*100))
+        QApplication.processEvents()
 
     def success(self, start: float, result: int):
         """Функция вывыда информации о карте
@@ -116,6 +131,4 @@ def application() -> None:
 
 
 if __name__ == "__main__":
-  #  cores = mp.cpu_count() # 8
- #   print(cores)
     application()
