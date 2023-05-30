@@ -62,7 +62,7 @@ class Window(QMainWindow):
             self.number = SETTING['begin_digits'][0]
         self.pool_size.activated[str].connect(self.choose_pool)
 
-    def choose_pool(self, text: str):
+    def choose_pool(self, text: str) -> None:
         """
         Функция присвоения размера пула
         """
@@ -72,7 +72,7 @@ class Window(QMainWindow):
             self.size = 0
         self.button_card.show()
 
-    def preparation(self):
+    def preparation(self) -> None:
         """
         функция подгатавливает линию прогресса и список для пула
         """
@@ -99,7 +99,7 @@ class Window(QMainWindow):
                 self.result.setText('НЕ НАЙДЕНО')
                 self.progress.setValue(0)
 
-    def update_progress_bar(self, i: int):
+    def update_progress_bar(self, i: int) -> None:
         """
         Функция обновления прогресса
         """
@@ -107,7 +107,7 @@ class Window(QMainWindow):
         self.progress.setValue(int((i)/9900000*100))
         QApplication.processEvents()
 
-    def success(self, start: float, result: int):
+    def success(self, start: float, result: int) -> None:
         """Функция вывыда информации о карте
         """
         self.result_card = result
@@ -119,7 +119,7 @@ class Window(QMainWindow):
         self.result.setText(result_text)
         self.graph.show()
 
-    def show_graph(self):
+    def show_graph(self) -> None:
         charting(self.result_card)
 
 

@@ -7,7 +7,7 @@ import numpy as np
 from hashing import check_hash
 
 
-def charting(card: str):
+def charting(card: str) -> None:
     """ Функция для рисования графика
     """
     times = np.empty(shape=0)
